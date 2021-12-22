@@ -1,4 +1,5 @@
 #include <temperature.h>
+#include <network.h>
 
 // For Temp Sensor
 #define DHT_PIN 26
@@ -44,7 +45,7 @@ char *readDht()
 
   // convert to JSON and return it
   char *json;
-  json = (char *)malloc(80);
+  json = (char *)malloc(100);
   char humid[12];
   char tempC[12];
 
@@ -56,6 +57,8 @@ char *readDht()
   strcat(strcpy(json, "{\"temp\":\""), tempC);
   strcat(json, "\",\"humid\":\"");
   strcat(json, humid);
+  strcat(json, "\",\"macAddress\":\"");
+  strcat(json, macAddress());
   strcat(json, "\"}");
 
   // Print to test

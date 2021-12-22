@@ -76,3 +76,10 @@ void postData(char *tempData)
     Serial.println("WiFi Disconnected");
   }
 }
+
+char* macAddress() {
+  String mac = WiFi.macAddress();
+  char buffer[20];
+  strcpy(buffer, mac.c_str());
+  return buffer;
+}

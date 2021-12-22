@@ -6,6 +6,7 @@
 
 void initWifi();
 void checkWiFi();
+char* macAddress();
 void postData(char *tempData);
 
 #endif
