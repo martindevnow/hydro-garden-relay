@@ -126,7 +126,7 @@ void setup()
   // Server
   setupRouting();
 
-  Serial.println("Booted..");
+  Serial.println("Device Bootstrapping Complete");
 }
 
 void loop()
@@ -149,13 +149,10 @@ void loop()
   if (currentMillis - sendTempPreviousMillis >= sendTempInterval)
   {
     Serial.println("Recording Temp data...");
-    char *tempData = readDht();
+    std::string tempData = readDht();
 
     // Send Data to Server
     postData(tempData);
-
-    // Free up memory
-    free(tempData);
 
     // Set previous send
     sendTempPreviousMillis = currentMillis;
