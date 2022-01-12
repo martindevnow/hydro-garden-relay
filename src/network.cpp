@@ -25,6 +25,8 @@ void initWifi()
   Serial.println(WiFi.localIP());
   Serial.print("RRSI: ");
   Serial.println(WiFi.RSSI());
+
+  postAttendance();
 }
 
 void checkWiFi()
@@ -44,9 +46,11 @@ void checkWiFi()
 }
 
 // External API Server
-const char *serverName = "http://192.168.0.250:3420/garden";
-// For sending data to server
+const char *serverName = "http://192.168.0.250:3334";
+const char *attendanceEndpoint = "http://192.168.0.250:3334/devices";
+const char *tempEndpoint = "http://192.168.0.250:3334/devices/temp";
 
+// For sending Temperature Data to server
 void postData(char *tempData)
 {
   //Check WiFi connection status
@@ -56,14 +60,14 @@ void postData(char *tempData)
     HTTPClient http;
 
     // Your Domain name with URL path or IP address with path
-    http.begin(client, serverName);
+    http.begin(client, tempEndpoint);
 
     // Specify content-type header
     http.addHeader("Content-Type", "application/json");
 
-    Serial.print("Sending data: ");
+    Serial.print("Sending Temperature: ");
     Serial.println(tempData);
-    int httpResponseCode = http.POST(tempData);
+    int httpResponseCode = http.PUT(tempData);
 
     Serial.print("HTTP Response code: ");
     Serial.println(httpResponseCode);
@@ -77,7 +81,44 @@ void postData(char *tempData)
   }
 }
 
-char* macAddress() {
+// For registering this device with the server
+void postAttendance()
+{
+  if (WiFi.status() == WL_CONNECTED)
+  {
+    WiFiClient client;
+    HTTPClient http;
+
+    // Your Domain name with URL path or IP address with path
+    http.begin(client, attendanceEndpoint);
+
+    // Specify content-type header
+    http.addHeader("Content-Type", "application/json");
+
+    // Build Body
+    char *json;
+    json = (char *)malloc(100);
+    strcat(strcpy(json, "{\"macAddress\":\""), macAddress());
+    strcat(json, "\"}");
+
+    Serial.print("Sending Attendance: ");
+    Serial.println();
+    int httpResponseCode = http.POST(json);
+
+    Serial.print("HTTP Response code: ");
+    Serial.println(httpResponseCode);
+
+    // Free resources
+    http.end();
+  }
+  else
+  {
+    Serial.println("WiFi Disconnected");
+  }
+}
+
+char *macAddress()
+{
   String mac = WiFi.macAddress();
   char buffer[20];
   strcpy(buffer, mac.c_str());
