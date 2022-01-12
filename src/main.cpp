@@ -32,7 +32,7 @@ char buffer[250];
 
 // For Temperature Logging
 unsigned long sendTempPreviousMillis = 0;
-unsigned long sendTempInterval = 30000;
+unsigned long sendTempInterval = 600000; // in miliseconds, 600 sec = 10 min
 
 void postTemp()
 {
