@@ -28,7 +28,6 @@ bool ledStatus = false;
 // For Server
 WebServer server(80);
 StaticJsonDocument<250> jsonDocument;
-char buffer[250];
 
 // For Temperature Logging
 unsigned long sendTempPreviousMillis = 0;
@@ -116,7 +115,7 @@ void setup()
 
   // DHT 11
   preferences.begin("my-app", false);
-  sendTempInterval = preferences.getULong("tempInterval", 30000);
+  sendTempInterval = preferences.getULong("tempInterval", 600000);
   preferences.end();
   setupDht();
 
