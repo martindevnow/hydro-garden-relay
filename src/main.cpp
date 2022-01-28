@@ -28,11 +28,10 @@ bool ledStatus = false;
 // For Server
 WebServer server(80);
 StaticJsonDocument<250> jsonDocument;
-char buffer[250];
 
 // For Temperature Logging
 unsigned long sendTempPreviousMillis = 0;
-unsigned long sendTempInterval = 30000;
+unsigned long sendTempInterval = 600000; // in miliseconds, 600 sec = 10 min
 
 void postTemp()
 {
@@ -116,7 +115,7 @@ void setup()
 
   // DHT 11
   preferences.begin("my-app", false);
-  sendTempInterval = preferences.getULong("tempInterval", 30000);
+  sendTempInterval = preferences.getULong("tempInterval", 600000);
   preferences.end();
   setupDht();
 
@@ -126,7 +125,7 @@ void setup()
   // Server
   setupRouting();
 
-  Serial.println("Booted..");
+  Serial.println("Device Bootstrapping Complete");
 }
 
 void loop()
@@ -149,13 +148,10 @@ void loop()
   if (currentMillis - sendTempPreviousMillis >= sendTempInterval)
   {
     Serial.println("Recording Temp data...");
-    char *tempData = readDht();
+    std::string tempData = readDht();
 
     // Send Data to Server
     postData(tempData);
-
-    // Free up memory
-    free(tempData);
 
     // Set previous send
     sendTempPreviousMillis = currentMillis;

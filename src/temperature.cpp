@@ -1,17 +1,29 @@
+#include <sstream>
+#include <string>
 #include <temperature.h>
 #include <network.h>
+
+using namespace std;
 
 // For Temp Sensor
 #define DHT_PIN 26
 #define DHT_TYPE DHT11
 DHT dht(DHT_PIN, DHT_TYPE);
 
+template <typename T>
+string tostr(const T &t)
+{
+  ostringstream os;
+  os << t;
+  return os.str();
+}
+
 void setupDht()
 {
   dht.begin();
 }
 
-char *readDht()
+string readDht()
 {
   float h = dht.readHumidity();
   // Read temperature as Celsius (the default)
@@ -43,27 +55,14 @@ char *readDht()
   Serial.print(hif);
   Serial.println(F("°F"));
 
-  // convert to JSON and return it
-  char *json;
-  json = (char *)malloc(100);
-  char humid[12];
-  char tempC[12];
+  string tempC = tostr(t);
+  string humid = tostr(h);
 
-  // Convert Floats to String
-  dtostrf(h, 4, 2, humid);
-  dtostrf(t, 4, 2, tempC);
-
-  // build JSON object
-  strcat(strcpy(json, "{\"temp\":\""), tempC);
-  strcat(json, "\",\"humid\":\"");
-  strcat(json, humid);
-  strcat(json, "\",\"macAddress\":\"");
-  strcat(json, macAddress());
-  strcat(json, "\"}");
+  string tempJson = "{\"temp\":\"" + tempC + "\",\"humid\":\"" + humid + "\",\"macAddress\":\"" + macAddress() + "\"}";
 
   // Print to test
   Serial.print("JSON: ");
-  Serial.println(json);
+  Serial.println(tempJson.c_str());
 
-  return json;
+  return tempJson;
 }
