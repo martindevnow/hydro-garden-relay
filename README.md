@@ -1,3 +1,3 @@
-# Hydro Garden IoT
+# Hydro Garden Relay
 
-This repo is for managing the code to run on my ESP32 for my smart garden
+This code is for programming an 8 channel relay module, with an ESP32 and 8 hall sensors for verifying power is being drawn when the relay is turned on.

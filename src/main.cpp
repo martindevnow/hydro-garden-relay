@@ -15,27 +15,51 @@
 #include <ArduinoJson.h>
 
 // Local Libraries
-#include <temperature.h>
 #include <network.h>
 #include <server.h>
 
 // For Persistent State
 Preferences preferences;
-bool ledStatus = false;
-// For LED
-#define LED_PIN 33
+bool relayPort1Status = false;
+bool relayPort2Status = false;
+bool relayPort3Status = false;
+bool relayPort4Status = false;
+bool relayPort5Status = false;
+bool relayPort6Status = false;
+bool relayPort7Status = false;
+bool relayPort8Status = false;
+
+// For Supplying Power to Relay
+#define RELAY_PORT1_PIN 32
+#define RELAY_PORT2_PIN 25
+#define RELAY_PORT3_PIN 26
+#define RELAY_PORT4_PIN 27
+#define RELAY_PORT5_PIN 23
+#define RELAY_PORT6_PIN 22
+#define RELAY_PORT7_PIN 21
+#define RELAY_PORT8_PIN 19
+
+// For Reading Hall Sensors
+#define HALL_PORT1_PIN 36
+#define HALL_PORT2_PIN 39
+#define HALL_PORT3_PIN 34
+#define HALL_PORT4_PIN 35
+#define HALL_PORT5_PIN 18
+#define HALL_PORT6_PIN 17
+#define HALL_PORT7_PIN 16
+#define HALL_PORT8_PIN 15
 
 // For Server
 WebServer server(80);
 StaticJsonDocument<250> jsonDocument;
 
 // For Temperature Logging
-unsigned long sendTempPreviousMillis = 0;
-unsigned long sendTempInterval = 600000; // in miliseconds, 600 sec = 10 min
+unsigned long checkHallPreviousMillis = 0;
+unsigned long checkHallInterval = 600000; // in miliseconds, 600 sec = 10 min
 
-void postTemp()
+void postHallInterval()
 {
-  Serial.print("Update Temp Interval: ");
+  Serial.print("Update Check Hall Interval: ");
   if (server.hasArg("plain") == false)
   {
     // handle error here
@@ -46,19 +70,19 @@ void postTemp()
 
   // Get RGB components
   unsigned long interval = jsonDocument["interval"];
-  sendTempInterval = interval;
+  checkHallInterval = interval;
 
   preferences.begin("my-app", false);
   Serial.println(interval);
-  preferences.putULong("tempInterval", interval);
+  preferences.putULong("checkHallInterval", interval);
   preferences.end();
 
   server.send(200, "application/json", "{}");
 }
 
-void postToggleLight()
+void postTogglePort()
 {
-  Serial.print("Toggle Light: ");
+  Serial.print("Toggle port: ");
   if (server.hasArg("plain") == false)
   {
     //handle error here
@@ -69,23 +93,54 @@ void postToggleLight()
 
   // Get RGB components
   int status = jsonDocument["status"];
+  int port = jsonDocument["port"];
 
-  if (status == 1)
+  preferences.begin("my-app", false);
+
+  switch (port)
   {
-    preferences.begin("my-app", false);
-    ledStatus = true;
-    Serial.println("On");
-    preferences.putBool("ledStatus", true);
-    preferences.end();
+  case 1:
+    relayPort1Status = status == 1;
+    Serial.print("Toggled Port 1");
+    Serial.println(status == 1);
+    break;
+  case 2:
+    relayPort2Status = status == 1;
+    Serial.print("Toggled Port 2");
+    Serial.println(status == 1);
+    break;
+  case 3:
+    relayPort3Status = status == 1;
+    Serial.print("Toggled Port 3");
+    Serial.println(status == 1);
+    break;
+  case 4:
+    relayPort4Status = status == 1;
+    Serial.print("Toggled Port 4");
+    Serial.println(status == 1);
+    break;
+  case 5:
+    relayPort5Status = status == 1;
+    Serial.print("Toggled Port 5");
+    Serial.println(status == 1);
+    break;
+  case 6:
+    relayPort6Status = status == 1;
+    Serial.print("Toggled Port 6");
+    Serial.println(status == 1);
+    break;
+  case 7:
+    relayPort7Status = status == 1;
+    Serial.print("Toggled Port 7");
+    Serial.println(status == 1);
+    break;
+  case 8:
+    relayPort8Status = status == 1;
+    Serial.print("Toggled Port 8");
+    Serial.println(status == 1);
+    break;
   }
-  else
-  {
-    preferences.begin("my-app", false);
-    ledStatus = false;
-    Serial.println("Off");
-    preferences.putBool("ledStatus", false);
-    preferences.end();
-  }
+  preferences.end();
 
   // Respond to the client
   server.send(200, "application/json", "{}");
@@ -93,8 +148,8 @@ void postToggleLight()
 
 void setupRouting()
 {
-  server.on("/light", HTTP_POST, postToggleLight);
-  server.on("/temp", HTTP_POST, postTemp);
+  server.on("/toggle", HTTP_POST, postTogglePort);
+  server.on("/interval", HTTP_POST, postHallInterval);
   server.begin();
 }
 
@@ -109,15 +164,38 @@ void setup()
 
   // LED
   preferences.begin("my-app", false);
-  ledStatus = preferences.getBool("ledStatus", false);
+  relayPort1Status = preferences.getBool("relayPort1Status", false);
+  relayPort2Status = preferences.getBool("relayPort2Status", false);
+  relayPort3Status = preferences.getBool("relayPort3Status", false);
+  relayPort4Status = preferences.getBool("relayPort4Status", false);
+  relayPort5Status = preferences.getBool("relayPort5Status", false);
+  relayPort6Status = preferences.getBool("relayPort6Status", false);
+  relayPort7Status = preferences.getBool("relayPort7Status", false);
+  relayPort8Status = preferences.getBool("relayPort8Status", false);
   preferences.end();
-  pinMode(LED_PIN, OUTPUT);
+
+  pinMode(RELAY_PORT1_PIN, OUTPUT);
+  pinMode(RELAY_PORT2_PIN, OUTPUT);
+  pinMode(RELAY_PORT3_PIN, OUTPUT);
+  pinMode(RELAY_PORT4_PIN, OUTPUT);
+  pinMode(RELAY_PORT5_PIN, OUTPUT);
+  pinMode(RELAY_PORT6_PIN, OUTPUT);
+  pinMode(RELAY_PORT7_PIN, OUTPUT);
+  pinMode(RELAY_PORT8_PIN, OUTPUT);
+
+  pinMode(HALL_PORT1_PIN, INPUT);
+  pinMode(HALL_PORT2_PIN, INPUT);
+  pinMode(HALL_PORT3_PIN, INPUT);
+  pinMode(HALL_PORT4_PIN, INPUT);
+  pinMode(HALL_PORT5_PIN, INPUT);
+  pinMode(HALL_PORT6_PIN, INPUT);
+  pinMode(HALL_PORT7_PIN, INPUT);
+  pinMode(HALL_PORT8_PIN, INPUT);
 
   // DHT 11
   preferences.begin("my-app", false);
-  sendTempInterval = preferences.getULong("tempInterval", 600000);
+  checkHallInterval = preferences.getULong("checkHallInterval", 600000);
   preferences.end();
-  setupDht();
 
   // WiFi
   initWifi();
@@ -132,29 +210,20 @@ void loop()
 {
   handleClient();
 
-  if (ledStatus == true)
-  {
-    digitalWrite(LED_PIN, HIGH);
-  }
-  else
-  {
-    digitalWrite(LED_PIN, LOW);
-  }
-
   checkWiFi();
 
   // getData
   unsigned long currentMillis = millis();
-  if (currentMillis - sendTempPreviousMillis >= sendTempInterval)
+  if (currentMillis - checkHallPreviousMillis >= checkHallInterval)
   {
-    Serial.println("Recording Temp data...");
-    std::string tempData = readDht();
+    Serial.println("Checking Hall sensors compared to relay...");
+    // std::string tempData = readDht();
 
     // Send Data to Server
-    postData(tempData);
+    // postData(tempData);
 
     // Set previous send
-    sendTempPreviousMillis = currentMillis;
+    checkHallPreviousMillis = currentMillis;
   }
 
   // Wait 2sec before running again
