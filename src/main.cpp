@@ -49,6 +49,100 @@ bool relayPort8Status = false;
 #define HALL_PORT7_PIN 16
 #define HALL_PORT8_PIN 15
 
+#define HALL_PIN 35
+
+void readHall()
+{
+  float ACSValue = 0.0, Samples = 0.0, AvgACS = 0.0, BaseVol = 1.52; //Change BaseVol as per your reading in the first step.
+  for (int x = 0; x < 500; x++)
+  { //This would take 500 Samples
+    ACSValue = analogRead(HALL_PIN);
+    Samples = Samples + ACSValue;
+    delay(3);
+  }
+  AvgACS = Samples / 500;
+  Serial.println((((AvgACS) * (3.3 / 4095.0)) - BaseVol) / 0.066); //0.066V = 66mVol. This is sensitivity of your ACS module.
+}
+
+void setRelayPins()
+{
+  Serial.print("relayPort1Status: ");
+  Serial.println(relayPort1Status);
+  if (relayPort1Status)
+  {
+    Serial.println("Port 1 is HIGH");
+    digitalWrite(RELAY_PORT1_PIN, HIGH);
+  }
+  else
+  {
+    Serial.println("Port 1 is LOW");
+    digitalWrite(RELAY_PORT1_PIN, LOW);
+  }
+
+  if (relayPort2Status)
+  {
+    digitalWrite(RELAY_PORT2_PIN, HIGH);
+  }
+  else
+  {
+    digitalWrite(RELAY_PORT2_PIN, LOW);
+  }
+
+  if (relayPort3Status)
+  {
+    digitalWrite(RELAY_PORT3_PIN, HIGH);
+  }
+  else
+  {
+    digitalWrite(RELAY_PORT3_PIN, LOW);
+  }
+
+  if (relayPort4Status)
+  {
+    digitalWrite(RELAY_PORT4_PIN, HIGH);
+  }
+  else
+  {
+    digitalWrite(RELAY_PORT4_PIN, LOW);
+  }
+
+  if (relayPort5Status)
+  {
+    digitalWrite(RELAY_PORT5_PIN, HIGH);
+  }
+  else
+  {
+    digitalWrite(RELAY_PORT5_PIN, LOW);
+  }
+
+  if (relayPort6Status)
+  {
+    digitalWrite(RELAY_PORT6_PIN, HIGH);
+  }
+  else
+  {
+    digitalWrite(RELAY_PORT6_PIN, LOW);
+  }
+
+  if (relayPort7Status)
+  {
+    digitalWrite(RELAY_PORT7_PIN, HIGH);
+  }
+  else
+  {
+    digitalWrite(RELAY_PORT7_PIN, LOW);
+  }
+
+  if (relayPort8Status)
+  {
+    digitalWrite(RELAY_PORT8_PIN, HIGH);
+  }
+  else
+  {
+    digitalWrite(RELAY_PORT8_PIN, LOW);
+  }
+}
+
 // For Server
 WebServer server(80);
 StaticJsonDocument<250> jsonDocument;
@@ -93,57 +187,65 @@ void postTogglePort()
 
   // Get RGB components
   int status = jsonDocument["status"];
+  Serial.print("Status: ");
+  Serial.println(status);
+
   int port = jsonDocument["port"];
+  Serial.print("Port: ");
+  Serial.println(port);
 
   preferences.begin("my-app", false);
 
   switch (port)
   {
   case 1:
-    relayPort1Status = status == 1;
-    Serial.print("Toggled Port 1");
-    Serial.println(status == 1);
+    relayPort1Status = status == 1 ? true : false;
+    Serial.print("Toggled Port 1: ");
+    Serial.println(relayPort1Status);
     break;
   case 2:
-    relayPort2Status = status == 1;
-    Serial.print("Toggled Port 2");
-    Serial.println(status == 1);
+    relayPort2Status = status == 1 ? true : false;
+    Serial.print("Toggled Port 2: ");
+    Serial.println(relayPort2Status);
     break;
   case 3:
-    relayPort3Status = status == 1;
-    Serial.print("Toggled Port 3");
-    Serial.println(status == 1);
+    relayPort3Status = status == 1 ? true : false;
+    Serial.print("Toggled Port 3: ");
+    Serial.println(relayPort3Status);
     break;
   case 4:
-    relayPort4Status = status == 1;
-    Serial.print("Toggled Port 4");
-    Serial.println(status == 1);
+    relayPort4Status = status == 1 ? true : false;
+    Serial.print("Toggled Port 4: ");
+    Serial.println(relayPort4Status);
     break;
   case 5:
-    relayPort5Status = status == 1;
-    Serial.print("Toggled Port 5");
-    Serial.println(status == 1);
+    relayPort5Status = status == 1 ? true : false;
+    Serial.print("Toggled Port 5: ");
+    Serial.println(relayPort5Status);
     break;
   case 6:
-    relayPort6Status = status == 1;
-    Serial.print("Toggled Port 6");
-    Serial.println(status == 1);
+    relayPort6Status = status == 1 ? true : false;
+    Serial.print("Toggled Port 6: ");
+    Serial.println(relayPort6Status);
     break;
   case 7:
-    relayPort7Status = status == 1;
-    Serial.print("Toggled Port 7");
-    Serial.println(status == 1);
+    relayPort7Status = status == 1 ? true : false;
+    Serial.print("Toggled Port 7: ");
+    Serial.println(relayPort7Status);
     break;
   case 8:
-    relayPort8Status = status == 1;
-    Serial.print("Toggled Port 8");
-    Serial.println(status == 1);
+    relayPort8Status = status == 1 ? true : false;
+    Serial.print("Toggled Port 8: ");
+    Serial.println(relayPort8Status);
     break;
   }
   preferences.end();
 
   // Respond to the client
   server.send(200, "application/json", "{}");
+
+  // Make sure pins are set properly based on new data
+  setRelayPins();
 }
 
 void setupRouting()
@@ -203,6 +305,9 @@ void setup()
   // Server
   setupRouting();
 
+  // Set pins based on loaded preferences
+  setRelayPins();
+
   Serial.println("Device Bootstrapping Complete");
 }
 
@@ -210,7 +315,14 @@ void loop()
 {
   handleClient();
 
+  // shouldn't need this in the loop since
+  // setup function loads last settings, and
+  // the webserver is responsible for updating
+  // setRelayPins();
+
   checkWiFi();
+
+  readHall();
 
   // getData
   unsigned long currentMillis = millis();
